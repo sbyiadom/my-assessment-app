@@ -1,12 +1,51 @@
+import { useEffect, useState } from "react";
+
 export default function Timer({ elapsed, totalSeconds }) {
-  const remaining = totalSeconds - elapsed;
-  const minutes = Math.floor(remaining / 60);
-  const seconds = remaining % 60;
+  const [remaining, setRemaining] = useState(totalSeconds - elapsed);
+
+  useEffect(() => {
+    setRemaining(totalSeconds - elapsed);
+  }, [elapsed, totalSeconds]);
+
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600)
+      .toString()
+      .padStart(2, "0");
+    const m = Math.floor((seconds % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  };
+
+  const progressPercent = Math.max(
+    0,
+    Math.min(100, (elapsed / totalSeconds) * 100)
+  );
 
   return (
-    <div style={{ padding: 10, background: '#f1f1f1', borderRadius: 5, width: 150, textAlign: 'center' }}>
-      <strong>Time Left:</strong>
-      <p>{minutes}:{seconds.toString().padStart(2, '0')}</p>
+    <div style={{ marginBottom: 20 }}>
+      <div
+        style={{
+          height: 20,
+          backgroundColor: "#ddd",
+          borderRadius: 10,
+          overflow: "hidden",
+          marginBottom: 5,
+        }}
+      >
+        <div
+          style={{
+            width: `${progressPercent}%`,
+            height: "100%",
+            backgroundColor: "#4CAF50",
+            transition: "width 1s linear",
+          }}
+        />
+      </div>
+      <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 16 }}>
+        Time Remaining: {formatTime(remaining)}
+      </div>
     </div>
   );
 }

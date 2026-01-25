@@ -12,30 +12,21 @@ export default function RegisterPage() {
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
-      alert('Please fill in all fields')
+      alert('Please fill all fields')
       return
     }
-
     setLoading(true)
-
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: name,
-          role,
-        },
-      },
+      options: { data: { full_name: name, role } },
     })
-
     if (error) {
       alert(error.message)
       setLoading(false)
       return
     }
-
-    alert('Account created! Please check your email to confirm.')
+    alert('Account created! Check your email to confirm.')
     router.push('/login')
   }
 
@@ -44,9 +35,10 @@ export default function RegisterPage() {
       style={{
         minHeight: '100vh',
         backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('https://images.unsplash.com/photo-1581091215368-75c5f8f92b18?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5NzA2MHwwfDF8c2VhcmNofDR8fHVuaXZlcnNpdHklMjBzdHVkZW50fGVufDB8fHx8MTY5OTMwMjI3MA&ixlib=rb-4.0.3&q=80&w=1080')",
+          "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSA5CqtFGh4hCt-hwZnJakbH4cxvlmF8DhZcQ&s')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backdropFilter: 'blur(3px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -54,24 +46,22 @@ export default function RegisterPage() {
     >
       <div
         style={{
-          background: 'rgba(255,255,255,0.95)',
-          padding: 40,
-          borderRadius: 16,
+          background: 'rgba(255,255,255,0.9)',
+          padding: 38,
+          borderRadius: 18,
           width: 400,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+          boxShadow: '0 15px 35px rgba(0,0,0,0.3)',
           textAlign: 'center',
         }}
       >
-        <h1 style={{ marginBottom: 25, color: '#222', fontFamily: 'Arial, sans-serif' }}>
-          Stratavax Register
-        </h1>
+        <h1 style={{ marginBottom: 22, color: '#0070f3' }}>Stratavax Register</h1>
 
         <input
           type="text"
           placeholder="Full Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 6 }}
+          style={{ width: '100%', padding: 14, marginBottom: 12, borderRadius: 8, border: '1px solid #ccc' }}
         />
 
         <input
@@ -79,7 +69,7 @@ export default function RegisterPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 6 }}
+          style={{ width: '100%', padding: 14, marginBottom: 12, borderRadius: 8, border: '1px solid #ccc' }}
         />
 
         <input
@@ -87,13 +77,13 @@ export default function RegisterPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 6 }}
+          style={{ width: '100%', padding: 14, marginBottom: 12, borderRadius: 8, border: '1px solid #ccc' }}
         />
 
         <select
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          style={{ width: '100%', padding: 12, marginBottom: 20, borderRadius: 6 }}
+          style={{ width: '100%', padding: 14, marginBottom: 20, borderRadius: 8, border: '1px solid #ccc' }}
         >
           <option value="candidate">Candidate</option>
           <option value="supervisor">Supervisor</option>
@@ -104,20 +94,20 @@ export default function RegisterPage() {
           disabled={loading}
           style={{
             width: '100%',
-            padding: 14,
-            backgroundColor: '#0070f3',
+            padding: 16,
+            backgroundColor: '#28a745',
             color: '#fff',
             border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
+            borderRadius: 10,
             fontWeight: 'bold',
+            cursor: 'pointer',
           }}
         >
           {loading ? 'Registering…' : 'Register'}
         </button>
 
-        <p style={{ marginTop: 20, fontSize: 14 }}>
-          Already have an account? <a href="/login" style={{ color: '#0070f3' }}>Login</a>
+        <p style={{ fontSize: 14, marginTop: 15 }}>
+          Already have an account? <a href="/login" style={{ color: '#0070f3', fontWeight: 'bold' }}>Login</a>
         </p>
       </div>
     </div>

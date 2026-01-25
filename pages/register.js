@@ -1,136 +1,122 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { supabase } from "../supabase/client";
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import AppLayout from '../components/AppLayout';
+import { supabase } from '../supabase/client';
 
 export default function Register() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("candidate");
-  const [error, setError] = useState("");
 
-  const handleRegister = async (e) => {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'candidate'
+  });
+
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = async e => {
     e.preventDefault();
-    setError("");
 
-    // Check if email already exists
-    const { data: existingUser } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .single();
+    const { error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: {
+          name: form.name,
+          role: form.role
+        }
+      }
+    });
 
-    if (existingUser) {
-      setError("Email already registered");
-      return;
+    if (error) {
+      alert(error.message);
+    } else {
+      // NO email confirmation → redirect straight to login
+      router.push('/login');
     }
-
-    const { error: insertError } = await supabase.from("users").insert([
-      {
-        name,
-        email,
-        password,
-        role,
-      },
-    ]);
-
-    if (insertError) {
-      setError("Failed to register. Try again.");
-      return;
-    }
-
-    alert("Registration successful! Please login.");
-    router.push("/login");
   };
 
   return (
-    <div
-      style={{
-        backgroundImage:
-          "url('https://media.istockphoto.com/id/1757344400/photo/smiling-college-student-writing-during-a-class-at-the-university.jpg')",
-        backgroundSize: "cover",
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-      }}
-    >
-      <form
-        onSubmit={handleRegister}
+    <AppLayout background="https://media.istockphoto.com/id/1757344400/photo/smiling-college-student-writing-during-a-class-at-the-university.jpg">
+      <div
         style={{
-          backgroundColor: "rgba(255,255,255,0.9)",
-          padding: 30,
-          borderRadius: 12,
-          width: 400,
-          display: "flex",
-          flexDirection: "column",
-          gap: 15,
+          maxWidth: 480,
+          margin: 'auto',
+          background: 'rgba(255,255,255,0.92)',
+          padding: 35,
+          borderRadius: 18,
+          boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
         }}
       >
-        <h2 style={{ textAlign: "center" }}>Create Account</h2>
+        <h1 style={{ textAlign: 'center', marginBottom: 20 }}>
+          Create Your Account
+        </h1>
 
-        {error && (
-          <p style={{ color: "red", textAlign: "center" }}>{error}</p>
-        )}
+        <form onSubmit={handleRegister}>
+          <input
+            name="name"
+            placeholder="Full Name"
+            required
+            onChange={handleChange}
+            style={inputStyle}
+          />
 
-        <input
-          type="text"
-          placeholder="Full Name"
-          value={name}
-          required
-          onChange={(e) => setName(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-        />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            required
+            onChange={handleChange}
+            style={inputStyle}
+          />
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          required
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-        />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            required
+            onChange={handleChange}
+            style={inputStyle}
+          />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          required
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-        />
+          <select
+            name="role"
+            onChange={handleChange}
+            style={inputStyle}
+          >
+            <option value="candidate">Candidate</option>
+            <option value="supervisor">Supervisor</option>
+          </select>
 
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-        >
-          <option value="candidate">Candidate</option>
-          <option value="supervisor">Supervisor</option>
-        </select>
-
-        <button
-          type="submit"
-          style={{
-            padding: 12,
-            backgroundColor: "#2196F3",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          Register
-        </button>
-
-        <p style={{ textAlign: "center" }}>
-          Already have an account? <a href="/login">Login</a>
-        </p>
-      </form>
-    </div>
+          <button style={buttonStyle}>
+            Register
+          </button>
+        </form>
+      </div>
+    </AppLayout>
   );
 }
+
+const inputStyle = {
+  width: '100%',
+  padding: 12,
+  marginBottom: 15,
+  borderRadius: 8,
+  border: '1px solid #ccc',
+  fontSize: 15
+};
+
+const buttonStyle = {
+  width: '100%',
+  padding: 14,
+  borderRadius: 10,
+  border: 'none',
+  background: 'linear-gradient(135deg, #2563eb, #1e3a8a)',
+  color: '#fff',
+  fontSize: 16,
+  cursor: 'pointer'
+};
 

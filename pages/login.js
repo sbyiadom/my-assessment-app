@@ -35,25 +35,25 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundImage: "url('/login-bg.png')",
-        backgroundRepeat: 'no-repeat',
+        backgroundImage: "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('/images/login-bg.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
       }}
     >
       <div
         style={{
-          background: 'rgba(255, 255, 255, 0.92)',
-          padding: 32,
-          borderRadius: 12,
-          width: 380,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.25)'
+          background: 'rgba(255,255,255,0.95)',
+          padding: 40,
+          borderRadius: 16,
+          width: 400,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+          textAlign: 'center',
         }}
       >
-        <h1 style={{ textAlign: 'center', marginBottom: 20 }}>
+        <h1 style={{ marginBottom: 25, color: '#222', fontFamily: 'Arial, sans-serif' }}>
           Stratavax Assessment
         </h1>
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: 10, marginBottom: 10 }}
+          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 6 }}
         />
 
         <input
@@ -70,13 +70,13 @@ export default function LoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: 10, marginBottom: 10 }}
+          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 6 }}
         />
 
         <select
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          style={{ width: '100%', padding: 10, marginBottom: 15 }}
+          style={{ width: '100%', padding: 12, marginBottom: 20, borderRadius: 6 }}
         >
           <option value="candidate">Candidate</option>
           <option value="supervisor">Supervisor</option>
@@ -85,18 +85,29 @@ export default function LoginPage() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          style={{ width: '100%', padding: 12 }}
+          style={{
+            width: '100%',
+            padding: 14,
+            backgroundColor: '#0070f3',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
         >
           {loading ? 'Logging in…' : 'Login'}
         </button>
 
-        <p style={{ textAlign: 'center', marginTop: 15 }}>
-          No account? <a href="/register">Register</a>
+        <p style={{ marginTop: 20, fontSize: 14 }}>
+          No account? <a href="/register" style={{ color: '#0070f3' }}>Register</a>
         </p>
       </div>
     </div>
   )
 }
+
+
 
 
 

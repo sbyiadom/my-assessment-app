@@ -5,27 +5,26 @@ import AppLayout from "../components/AppLayout";
 
 export default function Register() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [role, setRole] = useState("candidate");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { role, name } },
+      options: { data: { name, role } },
     });
 
-    setLoading(false);
-
-    if (error) return setError(error.message);
+    if (error) {
+      setError(error.message);
+      return;
+    }
 
     router.push("/login");
   };
@@ -35,18 +34,17 @@ export default function Register() {
       <form
         onSubmit={handleRegister}
         style={{
-          maxWidth: 400,
-          margin: "auto",
           backgroundColor: "rgba(255,255,255,0.9)",
           padding: 30,
-          borderRadius: 16,
+          borderRadius: 12,
+          width: 350,
+          margin: "auto",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+          gap: 15,
         }}
       >
-        <h2 style={{ textAlign: "center" }}>Create Account</h2>
+        <h2 style={{ textAlign: "center" }}>Register</h2>
 
         {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
 
@@ -56,31 +54,28 @@ export default function Register() {
           value={name}
           required
           onChange={(e) => setName(e.target.value)}
-          style={inputStyle}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
         />
-
         <input
           type="email"
           placeholder="Email"
           value={email}
           required
           onChange={(e) => setEmail(e.target.value)}
-          style={inputStyle}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
         />
-
         <input
           type="password"
           placeholder="Password"
           value={password}
           required
           onChange={(e) => setPassword(e.target.value)}
-          style={inputStyle}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
         />
-
         <select
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          style={inputStyle}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
         >
           <option value="candidate">Candidate</option>
           <option value="supervisor">Supervisor</option>
@@ -88,37 +83,24 @@ export default function Register() {
 
         <button
           type="submit"
-          disabled={loading}
-          style={buttonStyle}
+          style={{
+            padding: 12,
+            backgroundColor: "#4CAF50",
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
         >
-          {loading ? "Registering..." : "Register"}
+          Register
         </button>
 
         <p style={{ textAlign: "center" }}>
-          Already have an account?{" "}
-          <a href="/login" style={{ color: "#2563eb", fontWeight: "bold" }}>
-            Login
-          </a>
+          Already have an account? <a href="/login">Login</a>
         </p>
       </form>
     </AppLayout>
   );
 }
-
-const inputStyle = {
-  padding: 12,
-  borderRadius: 10,
-  border: "1px solid #ccc",
-  fontSize: 15,
-};
-
-const buttonStyle = {
-  padding: 12,
-  backgroundColor: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: 10,
-  cursor: "pointer",
-  fontWeight: "bold",
-};
 

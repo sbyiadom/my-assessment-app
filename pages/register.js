@@ -8,33 +8,38 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("candidate");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setError("");
 
-    // Sign up user and store role in metadata
-    const { data, error } = await supabase.auth.signUp(
-      {
-        email,
-        password,
-        options: {
-          data: { full_name: name, role },
-        },
-      }
-    );
+    // Check if email already exists
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
 
-    if (error) {
-      alert(error.message);
-      setLoading(false);
+    if (existingUser) {
+      setError("Email already registered");
       return;
     }
 
-    // Auto-confirm user for instant login
-    await supabase.auth.updateUser({ email_confirm: true });
+    const { error: insertError } = await supabase.from("users").insert([
+      {
+        name,
+        email,
+        password,
+        role,
+      },
+    ]);
 
-    setLoading(false);
+    if (insertError) {
+      setError("Failed to register. Try again.");
+      return;
+    }
+
     alert("Registration successful! Please login.");
     router.push("/login");
   };
@@ -49,6 +54,7 @@ export default function Register() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        padding: 20,
       }}
     >
       <form
@@ -56,43 +62,73 @@ export default function Register() {
         style={{
           backgroundColor: "rgba(255,255,255,0.9)",
           padding: 30,
-          borderRadius: 10,
+          borderRadius: 12,
+          width: 400,
           display: "flex",
           flexDirection: "column",
           gap: 15,
-          width: 350,
         }}
       >
-        <h2 style={{ textAlign: "center" }}>Stratavax Assessment - Register</h2>
+        <h2 style={{ textAlign: "center" }}>Create Account</h2>
+
+        {error && (
+          <p style={{ color: "red", textAlign: "center" }}>{error}</p>
+        )}
 
         <input
+          type="text"
           placeholder="Full Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
           required
+          onChange={(e) => setName(e.target.value)}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
         />
+
         <input
           type="email"
           placeholder="Email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
           required
+          onChange={(e) => setEmail(e.target.value)}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
         />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
           required
+          onChange={(e) => setPassword(e.target.value)}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
         />
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
+
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
+        >
           <option value="candidate">Candidate</option>
           <option value="supervisor">Supervisor</option>
         </select>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
+        <button
+          type="submit"
+          style={{
+            padding: 12,
+            backgroundColor: "#2196F3",
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          Register
         </button>
+
+        <p style={{ textAlign: "center" }}>
+          Already have an account? <a href="/login">Login</a>
+        </p>
       </form>
     </div>
   );

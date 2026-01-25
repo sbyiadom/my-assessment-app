@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-import { supabase } from '../../supabase/client'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "../../supabase/client";
+import QuestionCard from "../../component/questioncard";
+import Timer from "../../component/timer";
 
 export default function AssessmentPage() {
-  const router = useRouter()
-  const { id } = router.query
+  const router = useRouter();
+  const { id } = router.query;
 
-  const [questions, setQuestions] = useState([])
-  const [current, setCurrent] = useState(0)
-  const [answers, setAnswers] = useState({})
-  const [loading, setLoading] = useState(true)
+  const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [elapsed, setElapsed] = useState(0);
 
+  // Load questions from Supabase
   useEffect(() => {
-    if (!id) return
+    if (!id) return;
+
     const loadQuestions = async () => {
-      const { data } = await supabase
-        .from('questions')
+      const { data, error } = await supabase
+        .from("questions")
         .select(`
           id,
           question_text,
@@ -24,106 +29,105 @@ export default function AssessmentPage() {
             answer_text
           )
         `)
-        .order('id')
+        .order("id");
 
-      setQuestions(data || [])
-      setLoading(false)
+      if (error) {
+        alert("Failed to load questions");
+        return;
+      }
+
+      setQuestions((data || []).map((q) => ({
+        ...q,
+        options: q.answers || []
+      })));
+      setLoading(false);
+    };
+
+    loadQuestions();
+  }, [id]);
+
+  // Timer: increments every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed((t) => t + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSelect = (questionId, answerId) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: answerId
+    }));
+  };
+
+  const handleSubmit = async () => {
+    const payload = Object.entries(answers).map(([question_id, answer_id]) => ({
+      assessment_id: id,
+      question_id,
+      answer_id
+    }));
+
+    const { error } = await supabase.from("responses").upsert(payload);
+
+    if (error) {
+      alert("Failed to submit assessment");
+      return;
     }
-    loadQuestions()
-  }, [id])
 
-  if (loading) return <p style={{ textAlign: 'center' }}>Loading assessment…</p>
-  if (!questions.length) return <p>No questions found.</p>
+    alert("Assessment submitted successfully!");
+    router.push("/"); // redirect after submission
+  };
 
-  const q = questions[current]
+  const goNext = () => setCurrentIndex((prev) => Math.min(prev + 1, questions.length - 1));
+  const goPrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
 
-  const handleNext = () => {
-    if (current < questions.length - 1) setCurrent(current + 1)
-  }
-  const handlePrev = () => {
-    if (current > 0) setCurrent(current - 1)
-  }
+  if (loading) return <p style={{ textAlign: "center", marginTop: 50 }}>Loading assessment…</p>;
+  if (questions.length === 0) return <p style={{ textAlign: "center", marginTop: 50 }}>No questions found.</p>;
 
-  const selectAnswer = (qid, aid) => {
-    setAnswers(prev => ({ ...prev, [qid]: aid }))
-  }
+  const currentQuestion = questions[currentIndex];
 
   return (
     <div
       style={{
-        minHeight: '100vh',
-        backgroundImage:
-          "linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://media.istockphoto.com/id/507009337/photo/students-helping-each-other.jpg?s=612x612&w=0&k=20&c=993wW_Qvl_LW27TaeXJy2KHYd5tUix3n1dFZXPSkEBU=')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundImage: "url('https://media.istockphoto.com/id/1757344400/photo/smiling-college-student-writing-during-a-class-at-the-university.jpg')",
+        backgroundSize: "cover",
+        minHeight: "100vh",
         padding: 20,
       }}
     >
-      <h2 style={{ textAlign: 'center', marginBottom: 15 }}>Assessment</h2>
+      <div style={{
+        backgroundColor: "rgba(255,255,255,0.9)",
+        maxWidth: 700,
+        margin: "0 auto",
+        padding: 20,
+        borderRadius: 10,
+      }}>
+        <h1 style={{ textAlign: "center" }}>Stratavax Assessment</h1>
+        <Timer elapsed={elapsed} totalSeconds={3 * 60 * 60} />
 
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: 12,
-          padding: 22,
-          margin: 'auto',
-          maxWidth: 720,
-          boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-        }}
-      >
-        <p style={{ fontSize: 16, marginBottom: 10 }}>
-          Question {current + 1} of {questions.length}
-        </p>
+        <p><strong>Question {currentIndex + 1} of {questions.length}:</strong></p>
 
-        <h3 style={{ marginBottom: 15 }}>{q.question_text}</h3>
+        <QuestionCard
+          question={currentQuestion}
+          selected={answers[currentQuestion.id]}
+          onSelect={(answerId) => handleSelect(currentQuestion.id, answerId)}
+        />
 
-        {q.answers.map(o => (
-          <div key={o.id} style={{ marginBottom: 12 }}>
-            <label style={{ cursor: 'pointer' }}>
-              <input
-                type="radio"
-                name={q.id}
-                onChange={() => selectAnswer(q.id, o.id)}
-                checked={answers[q.id] === o.id}
-              />
-              {' '}
-              {o.answer_text}
-            </label>
-          </div>
-        ))}
-
-        <div style={{ marginTop: 25, display: 'flex', justifyContent: 'space-between' }}>
-          <button
-            onClick={handlePrev}
-            disabled={current === 0}
-            style={{
-              padding: '10px 20px',
-              borderRadius: 8,
-              background: '#6c757d',
-              color: '#fff',
-              border: 'none',
-            }}
-          >
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
+          <button onClick={goPrev} disabled={currentIndex === 0}>
             Previous
           </button>
-
-          <button
-            onClick={handleNext}
-            disabled={current === questions.length - 1}
-            style={{
-              padding: '10px 20px',
-              borderRadius: 8,
-              background: '#0070f3',
-              color: '#fff',
-              border: 'none',
-            }}
-          >
-            Next
-          </button>
+          {currentIndex < questions.length - 1 ? (
+            <button onClick={goNext}>Next</button>
+          ) : (
+            <button onClick={handleSubmit}>Submit Assessment</button>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 }
+
 
 

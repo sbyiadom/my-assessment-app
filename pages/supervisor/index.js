@@ -31,36 +31,37 @@ export default function SupervisorDashboard() {
     "decision_making",
   ];
 
-  // Load all candidates
+  // Fetch all candidates
   useEffect(() => {
     const fetchCandidates = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("id, name")
         .eq("role", "candidate");
-
+      if (error) console.error(error);
       setCandidates(data || []);
       setLoading(false);
     };
-
     fetchCandidates();
   }, []);
 
-  // Load responses for selected candidates
+  // Fetch responses for selected candidates
   useEffect(() => {
     if (!selected.length) return setResponses([]);
 
     const fetchResponses = async () => {
-      const { data } = await supabase
+      // Fetch answers linked to questions
+      const { data, error } = await supabase
         .from("responses")
         .select(`
           candidate_id,
           question_id,
-          answer_id,
-          questions (section),
-          answers (score)
+          answers!inner(score),
+          questions!inner(section)
         `)
         .in("candidate_id", selected);
+
+      if (error) console.error(error);
 
       setResponses(data || []);
     };
@@ -72,7 +73,6 @@ export default function SupervisorDashboard() {
   const categoryAverages = categories.map((cat) => {
     const catResponses = responses.filter((r) => r.questions.section === cat);
     if (!catResponses.length) return 0;
-
     const total = catResponses.reduce((sum, r) => sum + r.answers.score, 0);
     return (total / catResponses.length).toFixed(2);
   });
@@ -95,7 +95,7 @@ export default function SupervisorDashboard() {
       title: { display: true, text: "Assessment Performance by Category" },
     },
     scales: {
-      y: { min: 0, max: 5 }, // scores are 1-5
+      y: { min: 0, max: 5 }, // Assuming answers scored 1-5
     },
   };
 
@@ -146,6 +146,5 @@ export default function SupervisorDashboard() {
     </AppLayout>
   );
 }
-
 
 

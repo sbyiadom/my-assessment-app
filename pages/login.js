@@ -1,41 +1,11 @@
-import { useState } from 'react'
-import { useRouter } from 'next/router'
-import { supabase } from '../supabase/client'
-
 export default function LoginPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('candidate')
-  const [loading, setLoading] = useState(false)
-
-  const handleLogin = async () => {
-    setLoading(true)
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-
-    if (error) {
-      alert(error.message)
-      setLoading(false)
-      return
-    }
-
-    // redirect based on role
-    if (role === 'supervisor') {
-      router.push('/supervisor')
-    } else {
-      router.push('/assessment/start')
-    }
-  }
-
+  ...
   return (
     <div
       style={{
         minHeight: '100vh',
         backgroundImage: "url('/login-bg.png')",
+        backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         display: 'flex',
@@ -43,43 +13,24 @@ export default function LoginPage() {
         justifyContent: 'center'
       }}
     >
-      <div style={{ background: 'rgba(255,255,255,0.9)', padding: 30, borderRadius: 10, width: 360 }}>
-        <h1 style={{ textAlign: 'center' }}>Stratavax Assessment</h1>
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.92)',
+          padding: 32,
+          borderRadius: 12,
+          width: 380,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.25)'
+        }}
+      >
+        <h1 style={{ textAlign: 'center', marginBottom: 20 }}>
+          Stratavax Assessment
+        </h1>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: 10, marginBottom: 10 }}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: 10, marginBottom: 10 }}
-        />
-
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          style={{ width: '100%', padding: 10, marginBottom: 15 }}
-        >
-          <option value="candidate">Candidate</option>
-          <option value="supervisor">Supervisor</option>
-        </select>
-
-        <button onClick={handleLogin} disabled={loading} style={{ width: '100%', padding: 12 }}>
-          {loading ? 'Logging in…' : 'Login'}
-        </button>
-
-        <p style={{ textAlign: 'center', marginTop: 15 }}>
-          No account? <a href="/register">Register</a>
-        </p>
+        {/* form inputs here */}
       </div>
     </div>
   )
 }
+
 
 

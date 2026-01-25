@@ -25,9 +25,10 @@ export default function LoginPage() {
       style={{
         minHeight: '100vh',
         backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('/images/login-bg.jpg')",
+          "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('https://media.istockphoto.com/id/1757344400/photo/smiling-college-student-writing-during-a-class-at-the-university.jpg?s=612x612&w=0&k=20&c=_o2ZaJedvI0VfuH2rjGjMpYqXlBm_0BUv9Qxy2tHqK0=')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -39,7 +40,7 @@ export default function LoginPage() {
           background: 'rgba(255,255,255,0.9)',
           padding: 40,
           borderRadius: 20,
-          width: 400,
+          width: 380,
           boxShadow: '0 15px 35px rgba(0,0,0,0.35)',
           textAlign: 'center',
         }}
@@ -83,7 +84,7 @@ export default function LoginPage() {
             borderRadius: 10,
             fontWeight: 'bold',
             cursor: 'pointer',
-            marginBottom: 15,
+            marginBottom: 10,
           }}
         >
           {loading ? 'Logging in…' : 'Login'}
@@ -96,6 +97,7 @@ export default function LoginPage() {
     </div>
   )
 }
+
 
 
 

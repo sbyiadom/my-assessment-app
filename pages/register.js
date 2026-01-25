@@ -1,122 +1,124 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import AppLayout from '../components/AppLayout';
-import { supabase } from '../supabase/client';
+import { useState } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "../supabase/client";
+import AppLayout from "../components/AppLayout";
 
 export default function Register() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("candidate");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'candidate'
-  });
-
-  const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleRegister = async e => {
+  const handleRegister = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          name: form.name,
-          role: form.role
-        }
-      }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { role, name } },
     });
 
-    if (error) {
-      alert(error.message);
-    } else {
-      // NO email confirmation → redirect straight to login
-      router.push('/login');
-    }
+    setLoading(false);
+
+    if (error) return setError(error.message);
+
+    router.push("/login");
   };
 
   return (
-    <AppLayout background="https://media.istockphoto.com/id/1757344400/photo/smiling-college-student-writing-during-a-class-at-the-university.jpg">
-      <div
+    <AppLayout background="/images/register-bg.jpg">
+      <form
+        onSubmit={handleRegister}
         style={{
-          maxWidth: 480,
-          margin: 'auto',
-          background: 'rgba(255,255,255,0.92)',
-          padding: 35,
-          borderRadius: 18,
-          boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
+          maxWidth: 400,
+          margin: "auto",
+          backgroundColor: "rgba(255,255,255,0.9)",
+          padding: 30,
+          borderRadius: 16,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
         }}
       >
-        <h1 style={{ textAlign: 'center', marginBottom: 20 }}>
-          Create Your Account
-        </h1>
+        <h2 style={{ textAlign: "center" }}>Create Account</h2>
 
-        <form onSubmit={handleRegister}>
-          <input
-            name="name"
-            placeholder="Full Name"
-            required
-            onChange={handleChange}
-            style={inputStyle}
-          />
+        {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
 
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            required
-            onChange={handleChange}
-            style={inputStyle}
-          />
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={name}
+          required
+          onChange={(e) => setName(e.target.value)}
+          style={inputStyle}
+        />
 
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            required
-            onChange={handleChange}
-            style={inputStyle}
-          />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          required
+          onChange={(e) => setEmail(e.target.value)}
+          style={inputStyle}
+        />
 
-          <select
-            name="role"
-            onChange={handleChange}
-            style={inputStyle}
-          >
-            <option value="candidate">Candidate</option>
-            <option value="supervisor">Supervisor</option>
-          </select>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          required
+          onChange={(e) => setPassword(e.target.value)}
+          style={inputStyle}
+        />
 
-          <button style={buttonStyle}>
-            Register
-          </button>
-        </form>
-      </div>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="candidate">Candidate</option>
+          <option value="supervisor">Supervisor</option>
+        </select>
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={buttonStyle}
+        >
+          {loading ? "Registering..." : "Register"}
+        </button>
+
+        <p style={{ textAlign: "center" }}>
+          Already have an account?{" "}
+          <a href="/login" style={{ color: "#2563eb", fontWeight: "bold" }}>
+            Login
+          </a>
+        </p>
+      </form>
     </AppLayout>
   );
 }
 
 const inputStyle = {
-  width: '100%',
   padding: 12,
-  marginBottom: 15,
-  borderRadius: 8,
-  border: '1px solid #ccc',
-  fontSize: 15
+  borderRadius: 10,
+  border: "1px solid #ccc",
+  fontSize: 15,
 };
 
 const buttonStyle = {
-  width: '100%',
-  padding: 14,
+  padding: 12,
+  backgroundColor: "#2563eb",
+  color: "#fff",
+  border: "none",
   borderRadius: 10,
-  border: 'none',
-  background: 'linear-gradient(135deg, #2563eb, #1e3a8a)',
-  color: '#fff',
-  fontSize: 16,
-  cursor: 'pointer'
+  cursor: "pointer",
+  fontWeight: "bold",
 };
 

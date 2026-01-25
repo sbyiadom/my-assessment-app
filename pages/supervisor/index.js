@@ -31,7 +31,7 @@ export default function SupervisorDashboard() {
     "decision_making",
   ];
 
-  // Fetch all candidates
+  // 1️⃣ Fetch all candidates
   useEffect(() => {
     const fetchCandidates = async () => {
       const { data, error } = await supabase
@@ -45,17 +45,15 @@ export default function SupervisorDashboard() {
     fetchCandidates();
   }, []);
 
-  // Fetch responses for selected candidates
+  // 2️⃣ Fetch responses whenever selection changes
   useEffect(() => {
     if (!selected.length) return setResponses([]);
 
     const fetchResponses = async () => {
-      // Fetch answers linked to questions
       const { data, error } = await supabase
         .from("responses")
         .select(`
           candidate_id,
-          question_id,
           answers!inner(score),
           questions!inner(section)
         `)
@@ -69,10 +67,11 @@ export default function SupervisorDashboard() {
     fetchResponses();
   }, [selected]);
 
-  // Compute category averages
+  // 3️⃣ Compute averages per category
   const categoryAverages = categories.map((cat) => {
     const catResponses = responses.filter((r) => r.questions.section === cat);
     if (!catResponses.length) return 0;
+
     const total = catResponses.reduce((sum, r) => sum + r.answers.score, 0);
     return (total / catResponses.length).toFixed(2);
   });
@@ -95,7 +94,7 @@ export default function SupervisorDashboard() {
       title: { display: true, text: "Assessment Performance by Category" },
     },
     scales: {
-      y: { min: 0, max: 5 }, // Assuming answers scored 1-5
+      y: { min: 0, max: 5 }, // Assuming answers are scored 1-5
     },
   };
 
@@ -109,7 +108,7 @@ export default function SupervisorDashboard() {
         ) : (
           <>
             <div style={{ marginBottom: 20 }}>
-              <label>Select candidates:</label>
+              <label>Select candidate(s):</label>
               <select
                 multiple
                 value={selected}
@@ -146,5 +145,7 @@ export default function SupervisorDashboard() {
     </AppLayout>
   );
 }
+
+
 
 

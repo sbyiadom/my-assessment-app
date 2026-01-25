@@ -1,173 +1,65 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { supabase } from "../../supabase/client";
-
-import QuestionCard from "../../component/questioncard";
-import Timer from "../../component/timer";
-
-// Shuffle function
-const shuffleArray = (array) => array.sort(() => Math.random() - 0.5);
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
+import { supabase } from '../../supabase/client'
 
 export default function AssessmentPage() {
-  const router = useRouter();
-  const { id } = router.query;
-
-  const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [elapsed, setElapsed] = useState(0);
+  const router = useRouter()
+  const { id } = router.query
+  const [questions, setQuestions] = useState([])
+  const [answers, setAnswers] = useState({})
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) return
 
-    const loadQuestions = async () => {
+    const load = async () => {
       const { data, error } = await supabase
-        .from("questions")
-        .select(`
-          id,
-          section,
-          question_text,
-          answers (
-            id,
-            answer_text,
-            score,
-            interpretation
-          )
-        `)
-        .order("id");
+        .from('questions')
+        .select('id, text, answers(id, text)')
+        .order('id')
 
       if (error) {
-        console.error("Failed to load questions:", error);
-        alert("Failed to load questions: " + error.message);
-        return;
+        alert('Failed to load questions')
+        return
       }
 
       setQuestions(
-        (data || []).map((q, index) => ({
+        (data || []).map(q => ({
           ...q,
-          options: shuffleArray(q.answers || []), // 🔥 shuffle answers
-          number: index + 1,
+          options: q.answers || []
         }))
-      );
-      setLoading(false);
-    };
+      )
 
-    loadQuestions();
-  }, [id]);
+      setLoading(false)
+    }
 
-  useEffect(() => {
-    const interval = setInterval(() => setElapsed((t) => t + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
+    load()
+  }, [id])
 
-  const handleSelect = (questionId, answerId) =>
-    setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
-
-  const handleNext = () =>
-    setCurrentIndex((i) => Math.min(i + 1, questions.length - 1));
-  const handlePrev = () => setCurrentIndex((i) => Math.max(i - 1, 0));
-
-  const handleSubmit = async () => {
-    const payload = Object.entries(answers).map(([question_id, answer_id]) => ({
-      assessment_id: id,
-      question_id,
-      answer_id,
-    }));
-
-    const { error } = await supabase.from("responses").upsert(payload);
-    if (error) return alert("Failed to submit: " + error.message);
-    alert("Assessment submitted successfully!");
-    router.push("/login");
-  };
-
-  if (loading) return <p style={{ textAlign: "center" }}>Loading assessment…</p>;
-  if (!questions.length) return <p>No questions available.</p>;
-
-  const currentQuestion = questions[currentIndex];
-
-  const sectionColors = {
-    emotional_intelligence: "#FDE68A",
-    learning_agility: "#A7F3D0",
-    drive_for_results: "#BFDBFE",
-    adaptability: "#FECACA",
-    strategic_thinking: "#E0E7FF",
-  };
-  const bgColor = sectionColors[currentQuestion.section] || "#F3F4F6";
+  if (loading) return <p>Loading…</p>
 
   return (
-    <div
-      style={{
-        padding: 30,
-        maxWidth: 700,
-        margin: "0 auto",
-        fontFamily: "Arial, sans-serif",
-        backgroundColor: bgColor,
-        minHeight: "100vh",
-      }}
-    >
-      <h1 style={{ textAlign: "center", color: "#1D4ED8" }}>Candidate Assessment</h1>
-      <Timer elapsed={elapsed} totalSeconds={10800} />
+    <div style={{ padding: 30 }}>
+      <h1>Assessment</h1>
 
-      <QuestionCard
-        key={currentQuestion.id}
-        question={currentQuestion}
-        number={currentQuestion.number}
-        selected={answers[currentQuestion.id]}
-        onSelect={(answerId) => handleSelect(currentQuestion.id, answerId)}
-      />
+      {questions.map((q, index) => (
+        <div key={q.id} style={{ marginBottom: 25 }}>
+          <h3>{index + 1}. {q.text}</h3>
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
-        <button
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 6,
-            border: "none",
-            backgroundColor: currentIndex === 0 ? "#9CA3AF" : "#3B82F6",
-            color: "#fff",
-            cursor: currentIndex === 0 ? "not-allowed" : "pointer",
-          }}
-        >
-          Previous
-        </button>
-
-        {currentIndex === questions.length - 1 ? (
-          <button
-            onClick={handleSubmit}
-            style={{
-              padding: "10px 20px",
-              borderRadius: 6,
-              border: "none",
-              backgroundColor: "#10B981",
-              color: "#fff",
-              cursor: "pointer",
-            }}
-          >
-            Submit
-          </button>
-        ) : (
-          <button
-            onClick={handleNext}
-            style={{
-              padding: "10px 20px",
-              borderRadius: 6,
-              border: "none",
-              backgroundColor: "#3B82F6",
-              color: "#fff",
-              cursor: "pointer",
-            }}
-          >
-            Next
-          </button>
-        )}
-      </div>
-
-      <p style={{ marginTop: 20, textAlign: "center", color: "#374151" }}>
-        Question {currentIndex + 1} of {questions.length}
-      </p>
+          {q.options.map(o => (
+            <label key={o.id} style={{ display: 'block' }}>
+              <input
+                type="radio"
+                name={q.id}
+                onChange={() =>
+                  setAnswers(prev => ({ ...prev, [q.id]: o.id }))
+                }
+              />
+              {o.text}
+            </label>
+          ))}
+        </div>
+      ))}
     </div>
-  );
+  )
 }
-

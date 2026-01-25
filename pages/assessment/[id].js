@@ -15,25 +15,19 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
 
-  // Different background images for assessment pages
   const backgrounds = [
     "/images/assessment-bg1.jpg",
     "/images/assessment-bg2.jpg",
     "/images/assessment-bg3.jpg",
   ];
 
-  // Load questions
   useEffect(() => {
     if (!id) return;
 
     const loadQuestions = async () => {
       const { data, error } = await supabase
         .from("questions")
-        .select(`
-          id,
-          question_text,
-          answers (id, answer_text)
-        `)
+        .select("id, question_text, answers(id, answer_text)")
         .order("id");
 
       if (error) {
@@ -41,18 +35,13 @@ export default function AssessmentPage() {
         return;
       }
 
-      setQuestions((data || []).map((q) => ({
-        ...q,
-        options: q.answers || [],
-      })));
-
+      setQuestions((data || []).map((q) => ({ ...q, options: q.answers || [] })));
       setLoading(false);
     };
 
     loadQuestions();
   }, [id]);
 
-  // Timer
   useEffect(() => {
     const interval = setInterval(() => setElapsed((t) => t + 1), 1000);
     return () => clearInterval(interval);
@@ -79,20 +68,19 @@ export default function AssessmentPage() {
     }
 
     alert("Assessment submitted successfully!");
-    router.push("/"); // Redirect after submission
+    router.push("/");
   };
 
   if (loading) return <p>Loading assessment...</p>;
   if (!questions.length) return <p>No questions found.</p>;
 
   const currentQuestion = questions[currentIndex];
-  const bg = backgrounds[currentIndex % backgrounds.length]; // Cycle backgrounds
+  const bg = backgrounds[currentIndex % backgrounds.length];
 
   return (
     <AppLayout background={bg}>
       <div style={{ maxWidth: 800, margin: "auto", color: "#fff" }}>
-        <Timer elapsed={elapsed} totalSeconds={10800} /> {/* 3 hours */}
-
+        <Timer elapsed={elapsed} totalSeconds={10800} />
         <h2 style={{ textAlign: "center", marginBottom: 20 }}>
           Question {currentIndex + 1} of {questions.length}
         </h2>
@@ -104,11 +92,7 @@ export default function AssessmentPage() {
         />
 
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 30 }}>
-          <button
-            onClick={handleBack}
-            disabled={currentIndex === 0}
-            style={{ padding: 12, borderRadius: 8, cursor: "pointer" }}
-          >
+          <button onClick={handleBack} disabled={currentIndex === 0} style={{ padding: 12, borderRadius: 8, cursor: "pointer" }}>
             Back
           </button>
 
@@ -120,10 +104,7 @@ export default function AssessmentPage() {
               Submit Assessment
             </button>
           ) : (
-            <button
-              onClick={handleNext}
-              style={{ padding: 12, borderRadius: 8, cursor: "pointer" }}
-            >
+            <button onClick={handleNext} style={{ padding: 12, borderRadius: 8, cursor: "pointer" }}>
               Next
             </button>
           )}
@@ -132,7 +113,6 @@ export default function AssessmentPage() {
     </AppLayout>
   );
 }
-
 
 
 

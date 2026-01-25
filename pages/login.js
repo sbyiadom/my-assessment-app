@@ -6,41 +6,34 @@ export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("candidate");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password
-});
+      email,
+      password,
+    });
 
-if (!error) {
-  const role = data.user.user_metadata.role;
+    setLoading(false);
 
-  if (role === 'supervisor') {
-    router.push('/supervisor');
-  } else {
-    router.push('/assessment/active');
-  }
-}
-
-
-    if (error || !data) {
-      setError("User not found with this role");
+    if (error) {
+      setError(error.message);
       return;
     }
 
-    if (data.password !== password) {
-      setError("Incorrect password");
-      return;
-    }
+    const role = data.user.user_metadata.role;
 
-    // Save user in localStorage/session or context if needed
-    router.push("/assessment/1"); // Redirect to assessment
+    // 🔐 Route strictly by stored role
+    if (role === "supervisor") {
+      router.push("/supervisor");
+    } else {
+      router.push("/assessment/active");
+    }
   };
 
   return (
@@ -48,6 +41,7 @@ if (!error) {
       style={{
         backgroundImage: "url('/images/login-bg.jpg')",
         backgroundSize: "cover",
+        backgroundPosition: "center",
         minHeight: "100vh",
         display: "flex",
         justifyContent: "center",
@@ -58,16 +52,19 @@ if (!error) {
       <form
         onSubmit={handleLogin}
         style={{
-          backgroundColor: "rgba(255,255,255,0.9)",
-          padding: 30,
-          borderRadius: 12,
-          width: 350,
+          backgroundColor: "rgba(255,255,255,0.92)",
+          padding: 35,
+          borderRadius: 16,
+          width: 360,
           display: "flex",
           flexDirection: "column",
-          gap: 15,
+          gap: 16,
+          boxShadow: "0 30px 60px rgba(0,0,0,0.35)",
         }}
       >
-        <h2 style={{ textAlign: "center" }}>Stratavax Assessment</h2>
+        <h2 style={{ textAlign: "center", marginBottom: 10 }}>
+          Stratavax Assessment
+        </h2>
 
         {error && (
           <p style={{ color: "red", textAlign: "center" }}>{error}</p>
@@ -79,7 +76,7 @@ if (!error) {
           value={email}
           required
           onChange={(e) => setEmail(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
+          style={input}
         />
 
         <input
@@ -88,40 +85,42 @@ if (!error) {
           value={password}
           required
           onChange={(e) => setPassword(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
+          style={input}
         />
-
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-        >
-          <option value="candidate">Candidate</option>
-          <option value="supervisor">Supervisor</option>
-        </select>
 
         <button
           type="submit"
+          disabled={loading}
           style={{
             padding: 12,
-            backgroundColor: "#4CAF50",
+            backgroundColor: "#2563eb",
             color: "#fff",
             border: "none",
-            borderRadius: 8,
+            borderRadius: 10,
             cursor: "pointer",
             fontWeight: "bold",
           }}
         >
-          Login
+          {loading ? "Signing in..." : "Login"}
         </button>
 
-        <p style={{ textAlign: "center" }}>
-          Don't have an account? <a href="/register">Register</a>
+        <p style={{ textAlign: "center", marginTop: 10 }}>
+          Don&apos;t have an account?{" "}
+          <a href="/register" style={{ color: "#2563eb", fontWeight: "bold" }}>
+            Register
+          </a>
         </p>
       </form>
     </div>
   );
 }
+
+const input = {
+  padding: 12,
+  borderRadius: 10,
+  border: "1px solid #ccc",
+  fontSize: 15,
+};
 
 
 

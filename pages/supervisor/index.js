@@ -1,202 +1,151 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabase/client";
-
+import AppLayout from "../../components/AppLayout";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-  BarElement,
   CategoryScale,
   LinearScale,
+  BarElement,
+  Title,
   Tooltip,
   Legend,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function SupervisorDashboard() {
   const [candidates, setCandidates] = useState([]);
-  const [selectedCandidates, setSelectedCandidates] = useState([]);
-  const [chartData, setChartData] = useState(null);
+  const [selected, setSelected] = useState([]);
+  const [responses, setResponses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadCandidates();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCandidates.length > 0) {
-      loadAnalysis();
-    } else {
-      setChartData(null);
-    }
-  }, [selectedCandidates]);
+  const categories = [
+    "emotional_intelligence",
+    "learning_agility",
+    "drive_for_results",
+    "adaptability",
+    "strategic_thinking",
+    "numeracy",
+    "effective_communication",
+    "decision_making",
+  ];
 
   // Load all candidates
-  const loadCandidates = async () => {
-    const { data, error } = await supabase
-      .from("candidates")
-      .select("id, name, email");
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .eq("role", "candidate");
 
-    if (!error) setCandidates(data || []);
+      setCandidates(data || []);
+      setLoading(false);
+    };
+
+    fetchCandidates();
+  }, []);
+
+  // Load responses for selected candidates
+  useEffect(() => {
+    if (!selected.length) return setResponses([]);
+
+    const fetchResponses = async () => {
+      const { data } = await supabase
+        .from("responses")
+        .select(`
+          candidate_id,
+          question_id,
+          answer_id,
+          questions (section),
+          answers (score)
+        `)
+        .in("candidate_id", selected);
+
+      setResponses(data || []);
+    };
+
+    fetchResponses();
+  }, [selected]);
+
+  // Compute category averages
+  const categoryAverages = categories.map((cat) => {
+    const catResponses = responses.filter((r) => r.questions.section === cat);
+    if (!catResponses.length) return 0;
+
+    const total = catResponses.reduce((sum, r) => sum + r.answers.score, 0);
+    return (total / catResponses.length).toFixed(2);
+  });
+
+  const chartData = {
+    labels: categories.map((c) => c.replace(/_/g, " ").toUpperCase()),
+    datasets: [
+      {
+        label: selected.length === 1 ? "Candidate Score" : "Group Average",
+        data: categoryAverages,
+        backgroundColor: "rgba(54, 162, 235, 0.7)",
+      },
+    ],
   };
 
-  // Select / unselect candidates
-  const toggleCandidate = (id) => {
-    setSelectedCandidates((prev) =>
-      prev.includes(id)
-        ? prev.filter((c) => c !== id)
-        : [...prev, id]
-    );
-  };
-
-  // Load analysis (single or group)
-  const loadAnalysis = async () => {
-    const { data, error } = await supabase
-      .from("responses")
-      .select(`
-        candidate_id,
-        answers ( score ),
-        questions ( section )
-      `)
-      .in("candidate_id", selectedCandidates);
-
-    if (error) {
-      alert("Unable to load analysis");
-      return;
-    }
-
-    const sectionScores = {};
-
-    data.forEach((row) => {
-      const section = row.questions?.section;
-      const score = row.answers?.score;
-
-      if (!section || score == null) return;
-
-      if (!sectionScores[section]) {
-        sectionScores[section] = [];
-      }
-
-      sectionScores[section].push(score);
-    });
-
-    const labels = Object.keys(sectionScores).map((s) =>
-      s.replace(/_/g, " ").toUpperCase()
-    );
-
-    const averages = Object.values(sectionScores).map((scores) =>
-      (
-        scores.reduce((sum, val) => sum + val, 0) / scores.length
-      ).toFixed(2)
-    );
-
-    setChartData({
-      labels,
-      datasets: [
-        {
-          label:
-            selectedCandidates.length === 1
-              ? "Candidate Competency Profile"
-              : "Group Average Competency Profile",
-          data: averages,
-          backgroundColor: "#4CAF50",
-        },
-      ],
-    });
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: "top" },
+      title: { display: true, text: "Assessment Performance by Category" },
+    },
+    scales: {
+      y: { min: 0, max: 5 }, // scores are 1-5
+    },
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: 30,
-        backgroundImage:
-          "url('https://media.istockphoto.com/id/1757344400/photo/smiling-college-student-writing-during-a-class-at-the-university.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <h1 style={{ color: "#fff", textAlign: "center", marginBottom: 20 }}>
-        Supervisor Assessment Dashboard
-      </h1>
+    <AppLayout background="/images/supervisor-bg.jpg">
+      <div style={{ maxWidth: 900, margin: "auto", color: "#fff" }}>
+        <h1 style={{ textAlign: "center", marginBottom: 30 }}>Supervisor Dashboard</h1>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "280px 1fr",
-          gap: 20,
-        }}
-      >
-        {/* Candidate List */}
-        <div
-          style={{
-            background: "rgba(0,0,0,0.7)",
-            padding: 15,
-            borderRadius: 10,
-            color: "#fff",
-          }}
-        >
-          <h3>Select Candidates</h3>
+        {loading ? (
+          <p>Loading candidates...</p>
+        ) : (
+          <>
+            <div style={{ marginBottom: 20 }}>
+              <label>Select candidates:</label>
+              <select
+                multiple
+                value={selected}
+                onChange={(e) =>
+                  setSelected(Array.from(e.target.selectedOptions, (o) => o.value))
+                }
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 10,
+                  marginTop: 5,
+                }}
+              >
+                {candidates.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {candidates.map((c) => (
-            <label
-              key={c.id}
-              style={{
-                display: "block",
-                marginBottom: 8,
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedCandidates.includes(c.id)}
-                onChange={() => toggleCandidate(c.id)}
-              />{" "}
-              {c.name}
-            </label>
-          ))}
-        </div>
-
-        {/* Chart Area */}
-        <div
-          style={{
-            background: "rgba(0,0,0,0.65)",
-            padding: 20,
-            borderRadius: 10,
-            color: "#fff",
-          }}
-        >
-          {!chartData ? (
-            <p>
-              Select one or more candidates to view individual or group
-              analysis.
-            </p>
-          ) : (
-            <Bar
-              data={chartData}
-              options={{
-                responsive: true,
-                scales: {
-                  y: {
-                    min: 0,
-                    max: 5,
-                    ticks: { color: "#fff" },
-                  },
-                  x: {
-                    ticks: { color: "#fff" },
-                  },
-                },
-                plugins: {
-                  legend: {
-                    labels: { color: "#fff" },
-                  },
-                },
-              }}
-            />
-          )}
-        </div>
+            {responses.length ? (
+              <div style={{ marginTop: 30 }}>
+                <Bar data={chartData} options={chartOptions} />
+              </div>
+            ) : selected.length ? (
+              <p>No responses yet for selected candidate(s).</p>
+            ) : (
+              <p>Select one or more candidates to view analysis.</p>
+            )}
+          </>
+        )}
       </div>
-    </div>
+    </AppLayout>
   );
 }
+
 
 

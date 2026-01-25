@@ -2,25 +2,38 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../../supabase/client";
 import AppLayout from "../../components/AppLayout";
-import QuestionCard from "../../components/questioncard";
 import Timer from "../../components/timer";
+import QuestionCard from "../../components/questioncard";
 
 export default function AssessmentPage() {
   const router = useRouter();
   const { id } = router.query;
 
   const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
 
+  // Different background images for assessment pages
+  const backgrounds = [
+    "/images/assessment-bg1.jpg",
+    "/images/assessment-bg2.jpg",
+    "/images/assessment-bg3.jpg",
+  ];
+
+  // Load questions
   useEffect(() => {
     if (!id) return;
 
     const loadQuestions = async () => {
       const { data, error } = await supabase
         .from("questions")
-        .select("id, text, answers(id, text)")
+        .select(`
+          id,
+          question_text,
+          answers (id, answer_text)
+        `)
         .order("id");
 
       if (error) {
@@ -30,7 +43,7 @@ export default function AssessmentPage() {
 
       setQuestions((data || []).map((q) => ({
         ...q,
-        options: q.answers || []
+        options: q.answers || [],
       })));
 
       setLoading(false);
@@ -39,66 +52,87 @@ export default function AssessmentPage() {
     loadQuestions();
   }, [id]);
 
+  // Timer
   useEffect(() => {
-    const interval = setInterval(() => setElapsed(t => t + 1), 1000);
+    const interval = setInterval(() => setElapsed((t) => t + 1), 1000);
     return () => clearInterval(interval);
   }, []);
 
   const handleSelect = (questionId, answerId) => {
-    setAnswers(prev => ({ ...prev, [questionId]: answerId }));
+    setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
   };
+
+  const handleNext = () => setCurrentIndex((i) => Math.min(i + 1, questions.length - 1));
+  const handleBack = () => setCurrentIndex((i) => Math.max(i - 1, 0));
 
   const handleSubmit = async () => {
     const payload = Object.entries(answers).map(([question_id, answer_id]) => ({
       assessment_id: id,
       question_id,
-      answer_id
+      answer_id,
     }));
 
     const { error } = await supabase.from("responses").upsert(payload);
-    if (error) return alert("Failed to submit assessment");
+    if (error) {
+      alert("Failed to submit assessment");
+      return;
+    }
 
-    alert("Assessment submitted successfully");
+    alert("Assessment submitted successfully!");
+    router.push("/"); // Redirect after submission
   };
 
-  if (loading) return <p style={{ color: "white", textAlign: "center" }}>Loading assessment…</p>;
+  if (loading) return <p>Loading assessment...</p>;
+  if (!questions.length) return <p>No questions found.</p>;
+
+  const currentQuestion = questions[currentIndex];
+  const bg = backgrounds[currentIndex % backgrounds.length]; // Cycle backgrounds
 
   return (
-    <AppLayout background="/images/assessment-bg.jpg">
-      <div style={{ maxWidth: 800, margin: "auto" }}>
-        <h1 style={{ color: "#fff", textAlign: "center" }}>Assessment</h1>
-
+    <AppLayout background={bg}>
+      <div style={{ maxWidth: 800, margin: "auto", color: "#fff" }}>
         <Timer elapsed={elapsed} totalSeconds={10800} /> {/* 3 hours */}
 
-        {questions.map((q, idx) => (
-          <QuestionCard
-            key={q.id}
-            number={idx + 1}
-            question={q}
-            selected={answers[q.id]}
-            onSelect={answerId => handleSelect(q.id, answerId)}
-          />
-        ))}
+        <h2 style={{ textAlign: "center", marginBottom: 20 }}>
+          Question {currentIndex + 1} of {questions.length}
+        </h2>
 
-        <button
-          onClick={handleSubmit}
-          style={{
-            marginTop: 20,
-            padding: 12,
-            backgroundColor: "#4CAF50",
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          Submit Assessment
-        </button>
+        <QuestionCard
+          question={currentQuestion}
+          selected={answers[currentQuestion.id]}
+          onSelect={(answerId) => handleSelect(currentQuestion.id, answerId)}
+        />
+
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 30 }}>
+          <button
+            onClick={handleBack}
+            disabled={currentIndex === 0}
+            style={{ padding: 12, borderRadius: 8, cursor: "pointer" }}
+          >
+            Back
+          </button>
+
+          {currentIndex === questions.length - 1 ? (
+            <button
+              onClick={handleSubmit}
+              style={{ padding: 12, borderRadius: 8, cursor: "pointer", backgroundColor: "#4CAF50", color: "#fff" }}
+            >
+              Submit Assessment
+            </button>
+          ) : (
+            <button
+              onClick={handleNext}
+              style={{ padding: 12, borderRadius: 8, cursor: "pointer" }}
+            >
+              Next
+            </button>
+          )}
+        </div>
       </div>
     </AppLayout>
   );
 }
+
 
 
 

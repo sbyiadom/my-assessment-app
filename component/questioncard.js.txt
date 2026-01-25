@@ -1,0 +1,27 @@
+export default function QuestionCard({ question, selected, onSelect }) {
+  const options = question.options || [];
+
+  return (
+    <div style={{ marginBottom: 20, padding: 10, border: '1px solid #ddd', borderRadius: 8 }}>
+      <h3>{question.question_text}</h3>
+
+      {options.length === 0 && (
+        <p style={{ color: 'red' }}>No options found for this question.</p>
+      )}
+
+      {options.map((opt) => (
+        <label key={opt.id} style={{ display: 'block', marginTop: 5 }}>
+          <input
+            type="radio"
+            name={`q-${question.id}`}
+            checked={selected === opt.id}
+            onChange={() => onSelect(opt.id)}
+            style={{ marginRight: 8 }}
+          />
+          {opt.answer_text}
+        </label>
+      ))}
+    </div>
+  );
+}
+

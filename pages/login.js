@@ -13,12 +13,21 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .eq("role", role)
-      .single();
+    const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password
+});
+
+if (!error) {
+  const role = data.user.user_metadata.role;
+
+  if (role === 'supervisor') {
+    router.push('/supervisor');
+  } else {
+    router.push('/assessment/active');
+  }
+}
+
 
     if (error || !data) {
       setError("User not found with this role");
@@ -113,6 +122,7 @@ export default function Login() {
     </div>
   );
 }
+
 
 
 

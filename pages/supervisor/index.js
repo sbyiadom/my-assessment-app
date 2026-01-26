@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import AppLayout from "../../components/AppLayout";
+import AppLayout from "../../component/AppLayout";
 import { supabase } from "../../supabase/client";
 import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
@@ -56,6 +56,7 @@ export default function SupervisorDashboard() {
     </AppLayout>
   );
 }
+
 
 
 

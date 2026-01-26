@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../../supabase/client";
-import AppLayout from "../../components/AppLayout";
-import Timer from "../../components/timer";
-import QuestionCard from "../../components/questioncard";
+import AppLayout from "../../component/AppLayout";
+import Timer from "../../component/timer";
+import QuestionCard from "../../component/questioncard";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -15,44 +15,46 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
 
-  // Array of background images for assessment pages
+  // Backgrounds for assessment
   const backgrounds = [
     "/images/assessment-bg1.jpg",
     "/images/assessment-bg2.jpg",
     "/images/assessment-bg3.jpg",
   ];
 
-  // Load questions from Supabase
+  // Load questions
   useEffect(() => {
-    if (!id) return;
+    if (!id) return; // wait until id is available
 
-    const loadQuestions = async () => {
-      const { data, error } = await supabase
-        .from("questions")
-        .select(`
-          id,
-          question_text,
-          answers(id, answer_text)
-        `)
-        .order("id");
+    const fetchQuestions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("questions")
+          .select(`
+            id,
+            question_text,
+            answers(id, answer_text)
+          `)
+          .order("id");
 
-      if (error) {
+        if (error) throw error;
+
+        // Map questions safely
+        setQuestions(
+          (data || []).map((q) => ({
+            ...q,
+            options: q.answers || [],
+          }))
+        );
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
         alert("Failed to load questions");
         setLoading(false);
-        return;
       }
-
-      // Map questions safely
-      setQuestions(
-        (data || []).map((q) => ({
-          ...q,
-          options: q.answers || [],
-        }))
-      );
-      setLoading(false);
     };
 
-    loadQuestions();
+    fetchQuestions();
   }, [id]);
 
   // Timer for elapsed seconds
@@ -61,6 +63,7 @@ export default function AssessmentPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Select answer
   const handleSelect = (questionId, answerId) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
   };
@@ -80,15 +83,15 @@ export default function AssessmentPage() {
       answer_id,
     }));
 
-    const { error } = await supabase.from("responses").upsert(payload);
-
-    if (error) {
+    try {
+      const { error } = await supabase.from("responses").upsert(payload);
+      if (error) throw error;
+      alert("Assessment submitted successfully!");
+      router.push("/"); // redirect after submission
+    } catch (err) {
+      console.error(err);
       alert("Failed to submit assessment");
-      return;
     }
-
-    alert("Assessment submitted successfully!");
-    router.push("/"); // redirect after submission
   };
 
   // Safety checks
@@ -160,9 +163,3 @@ export default function AssessmentPage() {
     </AppLayout>
   );
 }
-
-
-
-
-
-

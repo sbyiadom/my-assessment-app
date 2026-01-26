@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../supabase/client";
-import AppLayout from "../components/AppLayout";
+import AppLayout from "../component/AppLayout";
 
 export default function Login() {
   const router = useRouter();
@@ -96,6 +96,7 @@ export default function Login() {
     </AppLayout>
   );
 }
+
 
 
 

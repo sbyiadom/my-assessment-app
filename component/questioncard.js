@@ -38,6 +38,3 @@ export default function QuestionCard({ question, selected, onSelect }) {
     </div>
   );
 }
-
-
-

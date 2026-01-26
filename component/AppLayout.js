@@ -3,17 +3,15 @@ export default function AppLayout({ children, background }) {
     <div
       style={{
         minHeight: '100vh',
-        backgroundImage: `linear-gradient(
-          rgba(0,0,0,0.55),
-          rgba(0,0,0,0.55)
-        ), url(${background})`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${background})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        padding: '40px'
+        padding: '40px',
       }}
     >
       {children}
     </div>
   );
 }
+

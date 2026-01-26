@@ -8,20 +8,13 @@ export default function Timer({ elapsed, totalSeconds }) {
   }, [elapsed, totalSeconds]);
 
   const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600)
-      .toString()
-      .padStart(2, "0");
-    const m = Math.floor((seconds % 3600) / 60)
-      .toString()
-      .padStart(2, "0");
+    const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${h}:${m}:${s}`;
   };
 
-  const progressPercent = Math.max(
-    0,
-    Math.min(100, (elapsed / totalSeconds) * 100)
-  );
+  const progressPercent = Math.max(0, Math.min(100, (elapsed / totalSeconds) * 100));
 
   return (
     <div style={{ marginBottom: 20 }}>

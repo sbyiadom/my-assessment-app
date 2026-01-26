@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../../supabase/client";
 import AppLayout from "../../component/AppLayout";
-import Timer from "../../component/timer";
-import QuestionCard from "../../component/questioncard";
+import Timer from "../../component/Timer";
+import QuestionCard from "../../component/QuestionCard";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -163,3 +163,4 @@ export default function AssessmentPage() {
     </AppLayout>
   );
 }
+

@@ -8,4 +8,3 @@ export function interpretScore(score) {
 export function interpretSection(section, score) {
   return `${section}: ${interpretScore(score)}`;
 }
-
